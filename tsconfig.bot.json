@@ -4,13 +4,13 @@
     "lib": ["ES2022"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "outDir": "dist",
-    "rootDir": "src",
+    "outDir": "dist-bot",
+    "rootDir": "src/discord-bot",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/discord-bot/**/*.ts"]
 }

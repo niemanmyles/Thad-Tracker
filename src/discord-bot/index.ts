@@ -1,8 +1,10 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { Client, GatewayIntentBits } from "discord.js";
 import { TRACKED_USER_IDS } from "./config.js";
 import { findLastDayTogether } from "./tracker.js";
 import { createServer, type SharedState } from "./server.js";
+
+config({ path: ".env.discord-bot" });
 
 const {
   DISCORD_TOKEN,
