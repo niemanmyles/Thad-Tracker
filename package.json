@@ -1,0 +1,38 @@
+{
+  "name": "thad-tracker",
+  "version": "1.0.0",
+  "description": "A website that tracks when thad last played games with us",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/niemanmyles/Thad-Tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/niemanmyles/Thad-Tracker/issues"
+  },
+  "homepage": "https://github.com/niemanmyles/Thad-Tracker#readme",
+  "workspaces": [
+    "thad-tracker-discord"
+  ],
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^7.0.2",
+    "vite": "^6.0.7"
+  }
+}
