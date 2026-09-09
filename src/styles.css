@@ -66,12 +66,8 @@ body {
     box-shadow: 0 0 0 3px #3a3560;
 }
 
-.hud-morale-segment.is-ok {
-    background: #7fd058;
-}
-
-.hud-morale-segment.is-lost {
-    background: #d64545;
+.hud-morale-segment.is-depleted {
+    background: transparent;
 }
 
 .hud-bar {

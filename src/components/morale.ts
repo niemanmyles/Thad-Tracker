@@ -20,3 +20,12 @@ export function getMoraleTier(days: number): (typeof MORALE_TIERS)[number] {
     const index = getLostSegments(days);
     return MORALE_TIERS[index as 0 | 1 | 2 | 3 | 4 | 5];
 }
+
+// Left-to-right gradient (red to green) for the remaining, non-depleted segments.
+export const MORALE_SEGMENT_COLORS = [
+    "#d64545",
+    "#e8663a",
+    "#e8944a",
+    "#ffd166",
+    "#7fd058",
+] as const satisfies readonly string[];
