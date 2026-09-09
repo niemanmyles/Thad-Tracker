@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { SquadMorale } from "./SquadMorale";
 import { DaysSinceBar } from "./DaysSinceBar";
 import { WarningIcon } from "./WarningIcon";
-import { getMoraleTier } from "./morale";
+import { getMoraleImage, getMoraleTier } from "./morale";
 
 interface LastTogetherResponse {
     unixTimestamp: number;
@@ -60,6 +60,7 @@ export function CallTracker() {
     }
 
     const moraleTier = getMoraleTier(days);
+    const moraleImage = getMoraleImage(days);
 
     return (
         <div className="hud">
@@ -68,7 +69,7 @@ export function CallTracker() {
 
             <SquadMorale days={days} />
             <DaysSinceBar days={days} />
-            <WarningIcon />
+            <WarningIcon imageSrc={moraleImage} />
         </div>
     );
 }
