@@ -1,7 +1,7 @@
 // Shared squad morale tier logic for Thad tracker.
 
 export const MORALE_SEGMENTS = 5;
-export const MORALE_DAYS_PER_SEGMENT = 7;
+export const MORALE_DAYS_PER_SEGMENT = 3;
 
 export function getLostSegments(days: number): number {
     return Math.min(MORALE_SEGMENTS, Math.floor(days / MORALE_DAYS_PER_SEGMENT));
