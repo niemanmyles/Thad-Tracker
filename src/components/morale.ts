@@ -9,7 +9,6 @@ export function getLostSegments(days: number): number {
 
 const MORALE_TIERS = [
     { label: "Stable", color: "#7fd058" },
-    { label: "Uneasy", color: "#b5d058" },
     { label: "Worried", color: "#ffd166" },
     { label: "Anxious", color: "#e8944a" },
     { label: "Dread", color: "#e8663a" },
@@ -17,8 +16,8 @@ const MORALE_TIERS = [
 ] as const satisfies { label: string; color: string }[];
 
 export function getMoraleTier(days: number): (typeof MORALE_TIERS)[number] {
-    const index = getLostSegments(days);
-    return MORALE_TIERS[index as 0 | 1 | 2 | 3 | 4 | 5];
+    const index = Math.min(getLostSegments(days), MORALE_TIERS.length - 1);
+    return MORALE_TIERS.at(index) ?? MORALE_TIERS[4];
 }
 
 // Left-to-right gradient (red to green) for the remaining, non-depleted segments.
