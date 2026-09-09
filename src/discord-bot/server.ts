@@ -1,10 +1,12 @@
 import express from "express";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Server } from "node:http";
 import type { TogetherResult } from "./tracker.js";
 
 // Built frontend output (see package.json "build"), served alongside the API.
-const STATIC_DIR = path.join(import.meta.dirname, "..", "dist");
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+const STATIC_DIR = path.join(MODULE_DIR, "..", "dist");
 
 export interface SharedState {
   result: TogetherResult | null;
