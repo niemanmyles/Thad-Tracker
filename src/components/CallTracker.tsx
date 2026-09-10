@@ -22,28 +22,30 @@ export function CallTracker() {
     const [days, setDays] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    // Retrieve last date seen from discord bot.
     useEffect(() => {
         let cancelled = false;
 
-        fetch("/last-together")
-            .then(async (res) => {
-                if (res.status === 503) {
+        const load = async () => {
+            try {
+                const response = await fetch("/last-together", { method: 'GET', headers: { Accept: 'application/json' } });
+                if (response.status === 503) {
                     throw new Error("not yet computed");
                 }
-                if (!res.ok) {
-                    throw new Error(`request failed: ${res.status}`);
+                if (!response.ok) {
+                    throw new Error(`request failed: ${response.status}`);
                 }
-                return (await res.json()) as LastTogetherResponse;
-            })
-            .then((data) => {
+                const data: LastTogetherResponse = await response.json();
                 if (cancelled) return;
                 setDays(daysSince(new Date(data.unixTimestamp * 1000)));
                 setError(null);
-            })
-            .catch((err: Error) => {
+            } catch (err) {
                 if (cancelled) return;
-                setError(err.message);
-            });
+                setError(err instanceof Error ? err.message : "Unknown error");
+            }
+        };
+
+        load();
 
         return () => {
             cancelled = true;
