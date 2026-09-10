@@ -28,7 +28,7 @@ export function CallTracker() {
 
         const load = async () => {
             try {
-                const response = await fetch("/last-together", { method: 'GET', headers: { Accept: 'application/json' } });
+                const response = await fetch("/last-together");
                 if (response.status === 503) {
                     throw new Error("not yet computed");
                 }
