@@ -1,5 +1,5 @@
 import type { TextBasedChannel } from "discord.js";
-import { parseJoinEvent } from "./logParser.js";
+import { parseVoiceEvent, type VoiceEvent } from "./logParser.js";
 
 export interface TogetherResult {
   dayKey: string;
@@ -23,29 +23,51 @@ function dayKeyFor(timestampMs: number, timezone: string): string {
 }
 
 /**
- * Scans a Dyno voice-log channel backward from the present, grouping "joined
- * voice channel" events by calendar day, and returns the most recent day on
- * which every tracked user has at least one join event. A day is only
- * evaluated once scanning has moved past it (older messages can't add to it),
- * so the first qualifying day found while going backward is the answer.
+ * Replays voice events (oldest first) and returns the most recent instant at
+ * which every tracked user was in the same voice channel: the moment that
+ * overlap ended, or `nowMs` if it's still going. Each user's starting channel
+ * is inferred from their first event (a "left #x" means they were in #x), so
+ * a user with no events in the window can never count as present.
+ */
+function lastMomentTogether(events: readonly VoiceEvent[], trackedIds: readonly string[], nowMs: number): number | null {
+  const location = new Map<string, string | null>();
+  for (const event of events) {
+    if (!location.has(event.userId)) location.set(event.userId, event.fromChannelId);
+  }
+  if (location.size < trackedIds.length) return null;
+
+  const allTogether = (): boolean => {
+    const first = location.get(trackedIds[0]!);
+    return first != null && trackedIds.every((id) => location.get(id) === first);
+  };
+
+  let lastEndMs: number | null = null;
+  let together = allTogether();
+  for (const event of events) {
+    location.set(event.userId, event.toChannelId);
+    const nowTogether = allTogether();
+    if (together && !nowTogether) lastEndMs = event.timestampMs;
+    together = nowTogether;
+  }
+
+  return together ? nowMs : lastEndMs;
+}
+
+/**
+ * Scans a Dyno voice-log channel backward from the present, collecting
+ * join/leave/switch events for the tracked users, and returns the most recent
+ * moment they were all in the same voice channel at the same time. Older
+ * messages can only reveal earlier overlaps, so the scan stops as soon as the
+ * collected window contains one.
  */
 export async function findLastDayTogether(
   channel: TextBasedChannel,
   { trackedIds, timezone, maxMessages, pageSize = 100 }: ScanOptions,
 ): Promise<TogetherResult | null> {
+  const nowMs = Date.now();
+  const newestFirst: VoiceEvent[] = [];
   let beforeId: string | undefined;
   let scanned = 0;
-
-  let currentDayKey: string | null = null;
-  let currentDayTimestamps = new Map<string, number>();
-
-  const checkDayComplete = (): TogetherResult | null => {
-    if (currentDayKey && currentDayTimestamps.size === trackedIds.length) {
-      const unixTimestamp = Math.floor(Math.max(...currentDayTimestamps.values()) / 1000);
-      return { dayKey: currentDayKey, unixTimestamp };
-    }
-    return null;
-  };
 
   while (scanned < maxMessages) {
     const batch = await channel.messages.fetch({
@@ -56,25 +78,13 @@ export async function findLastDayTogether(
 
     for (const message of batch.values()) {
       scanned++;
-      const event = parseJoinEvent(message, trackedIds);
-      if (!event) continue;
+      const event = parseVoiceEvent(message, trackedIds);
+      if (event) newestFirst.push(event);
+    }
 
-      const dayKey = dayKeyFor(event.timestampMs, timezone);
-
-      if (currentDayKey === dayKey) {
-        if (!currentDayTimestamps.has(event.userId)) {
-          currentDayTimestamps.set(event.userId, event.timestampMs);
-        }
-        continue;
-      }
-
-      if (currentDayKey !== null) {
-        const result = checkDayComplete();
-        if (result) return result;
-      }
-
-      currentDayKey = dayKey;
-      currentDayTimestamps = new Map([[event.userId, event.timestampMs]]);
+    const momentMs = lastMomentTogether([...newestFirst].reverse(), trackedIds, nowMs);
+    if (momentMs !== null) {
+      return { dayKey: dayKeyFor(momentMs, timezone), unixTimestamp: Math.floor(momentMs / 1000) };
     }
 
     const oldest = batch.last();
@@ -82,5 +92,5 @@ export async function findLastDayTogether(
     beforeId = oldest.id;
   }
 
-  return checkDayComplete();
+  return null;
 }

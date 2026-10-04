@@ -4,9 +4,10 @@ A website that tracks when thad last played games with us
 ## Discord bot outputs
 
 `src/discord-bot` (run via `npm run bot:dev` / `npm run bot:build` + `npm run bot:start`) scans
-the Dyno voice-log channel and figures out the last calendar day on which everyone listed in
-[`src/discord-bot/config.ts`](src/discord-bot/config.ts) had a "joined voice channel" event —
-same day counts, their sessions don't need to overlap. It exposes the result two ways:
+the Dyno voice-log channel, replays the join / leave / switch events, and figures out the last
+moment everyone listed in [`src/discord-bot/config.ts`](src/discord-bot/config.ts) was in the
+**same voice channel at the same time**. Being on the same day isn't enough — their sessions
+have to overlap in one channel. It exposes the result two ways:
 
 ### HTTP API
 
@@ -14,7 +15,7 @@ Served on `PORT` (default `3000`, set in `.env.discord-bot`).
 
 #### `GET /last-together`
 
-Returns the most recent qualifying day, if one has been found yet.
+Returns the most recent time all three were together, if one has been found yet.
 
 ```json
 {
@@ -24,9 +25,10 @@ Returns the most recent qualifying day, if one has been found yet.
 }
 ```
 
-- `unixTimestamp` — seconds since epoch; the latest of the three users' join times on that day
-  (i.e. the moment the last of the three showed up)
-- `date` — the calendar day, as `YYYY-MM-DD`, in the `TIMEZONE` configured in `.env.discord-bot`
+- `unixTimestamp` — seconds since epoch; the moment the most recent overlap ended (the first of
+  the three left or switched away), or the scan time if they're all in a channel together right now
+- `date` — the calendar day of `unixTimestamp`, as `YYYY-MM-DD`, in the `TIMEZONE` configured in
+  `.env.discord-bot`
 - `lastScanAt` — milliseconds since epoch when the scan that produced this result finished
 
 If no scan has completed yet (bot just started, or every scan so far has errored), the endpoint
@@ -55,6 +57,6 @@ Logged in as ThadTracker#1234
 Scan complete: { dayKey: '2026-09-08', unixTimestamp: 1757315760 }
 ```
 
-`Scan complete: null` means no day in the scanned history (`MAX_MESSAGES_TO_SCAN` messages back)
-had all three tracked users present. A failed scan logs `Scan failed:` with the error instead, and
+`Scan complete: null` means the scanned history (`MAX_MESSAGES_TO_SCAN` messages back) never had
+all three tracked users in the same voice channel at once. A failed scan logs `Scan failed:` with the error instead, and
 updates `lastError` above without touching the previous `/last-together` result.
